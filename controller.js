@@ -12,7 +12,7 @@ export const getUsers = async (req, res) => {
     res.status(200).json({ success: true, data: users });
   } catch (error) {
     console.log("Error in getUsers function", error);
-    res.stauts(500).json({ success: false, message: "Internal Server Error" });
+    res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
 
@@ -39,7 +39,7 @@ export const createUser = async (req, res) => {
     res.status(201).json({ success: true, data: newUser[0] });
   } catch (error) {
     console.log("Error in createUser function", error);
-    res.stauts(500).json({ success: false, message: "Internal Server Error" });
+    res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
 
@@ -132,7 +132,7 @@ export const loginUser = async (req, res) => {
     );
 
     if (!isPasswordValid) {
-      res.status(401).json({ success: false, message: "Invalid credentials" });
+      return res.status(401).json({ success: false, message: "Invalid credentials" });
     }
 
     const token = jwt.sign(
@@ -141,9 +141,16 @@ export const loginUser = async (req, res) => {
       { expiresIn: "1h" }
     );
 
+    res.cookie("token", token, {
+      httpOnly: true, // JavaScript cannot access this cookie (prevents XSS attacks)
+      secure: process.env.NODE_ENV === "production", // Only secure in production
+      sameSite: "strict", // Prevent CSRF attacks
+      maxAge: 60 * 60 * 1000, // Cookie expires in 1 hour (optional)
+    });
+
     res.status(200).json({
       success: true,
-      token,
+      message: "Logged in successfully",
       user: {
         id: existingUser.id,
         email: existingUser.email,
@@ -153,6 +160,36 @@ export const loginUser = async (req, res) => {
     });
   } catch (error) {
     console.log("Error in loginUser function", error);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+};
+
+export const logoutUser = (req, res) => {
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production", // Only secure in production
+    sameSite: "strict",
+  });
+
+  return res
+    .status(200)
+    .json({ success: true, message: "Logged out successfully" });
+};
+
+export const accessProfile = async (req, res) => {
+  try {
+    const user = await sql`
+        SELECT id, first_name, last_name, email FROM users WHERE id = ${req.user.id};
+    `;
+
+    if (user.length === 0) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found." });
+    }
+
+    res.status(200).json({ success: true, data: user[0] });
+  } catch (error) {
     res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };

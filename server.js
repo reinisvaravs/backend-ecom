@@ -2,7 +2,8 @@ import express from "express";
 import dotenv from "dotenv";
 import { sql } from "./db.js";
 import userRoutes from "./userRoutes.js";
-import { loginUser } from "./controller.js";
+import cookieParser from "cookie-parser";
+import rootRoutes from "./rootRoutes.js"
 
 dotenv.config();
 
@@ -10,12 +11,13 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
+app.use(cookieParser());
 app.get("/", (req, res) => {
   res.send("<h1>Hello from the Backend!</h1>");
 });
 
 app.use("/api/users", userRoutes);
-app.post("/login", loginUser);
+app.use("/", rootRoutes)
 
 async function initDB() {
   try {

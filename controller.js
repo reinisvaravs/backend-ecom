@@ -25,6 +25,16 @@ export const createUser = async (req, res) => {
       .json({ success: false, message: "All fields are required." });
   }
 
+  const existingUser = await sql`
+    SELECT * FROM users WHERE email = ${email} LIMIT 1;
+  `;
+  
+  if (existingUser.length > 0) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Email already exists." });
+  }
+
   // Hash the password before storing it
   const hashedPassword = await bcrypt.hash(password, 10); // 10 is the salt rounds
 
@@ -132,7 +142,9 @@ export const loginUser = async (req, res) => {
     );
 
     if (!isPasswordValid) {
-      return res.status(401).json({ success: false, message: "Invalid credentials" });
+      return res
+        .status(401)
+        .json({ success: false, message: "Invalid credentials" });
     }
 
     const token = jwt.sign(

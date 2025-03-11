@@ -3,8 +3,10 @@ import dotenv from "dotenv";
 import { sql } from "./db.js";
 import userRoutes from "./routes/userRoutes.js";
 import cookieParser from "cookie-parser";
-import rootRoutes from "./routes/rootRoutes.js"
-import productRoutes from "./routes/productRoutes.js"
+import rootRoutes from "./routes/rootRoutes.js";
+import productRoutes from "./routes/productRoutes.js";
+import paymentRoutes from "./routes/paymentRoutes.js";
+import path from "path";
 
 dotenv.config();
 
@@ -14,12 +16,13 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(cookieParser());
 app.get("/", (req, res) => {
-  res.send("<h1>Hello from the Backend!</h1>");
+  res.sendFile(path.join(process.cwd(), "public", "index.html"));
 });
 
+app.use("/", rootRoutes);
 app.use("/api/users", userRoutes);
-app.use("/", rootRoutes)
-app.use("/api/products", productRoutes)
+app.use("/api/products", productRoutes);
+app.use("/api/payments", paymentRoutes);
 
 async function initDB() {
   try {

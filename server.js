@@ -1,9 +1,10 @@
 import express from "express";
 import dotenv from "dotenv";
 import { sql } from "./db.js";
-import userRoutes from "./userRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
 import cookieParser from "cookie-parser";
-import rootRoutes from "./rootRoutes.js"
+import rootRoutes from "./routes/rootRoutes.js"
+import productRoutes from "./routes/productRoutes.js"
 
 dotenv.config();
 
@@ -18,6 +19,7 @@ app.get("/", (req, res) => {
 
 app.use("/api/users", userRoutes);
 app.use("/", rootRoutes)
+app.use("/api/products", productRoutes)
 
 async function initDB() {
   try {

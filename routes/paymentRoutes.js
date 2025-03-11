@@ -1,6 +1,7 @@
 import express from "express";
 import Stripe from "stripe";
 import dotenv from "dotenv";
+import { sql } from "../db.js";
 
 dotenv.config();
 const router = express.Router();
@@ -10,15 +11,14 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 // Creates a Stripe Checkout Session
 router.post("/create-checkout-session", async (req, res) => {
-  const { productId } = req.body;
+  const { email, productId } = req.body;
 
-  const productPrices = {
-    1: "price_1R1VV3QHjri1zl3JyVpFFw5b",
-    2: "price_1R1VYyQHjri1zl3J8Dc1i5em",
-    // hero plan is paid using crypto only
+  const productPlans = {
+    1: { priceId: "price_1R1VV3QHjri1zl3JyVpFFw5b", plan: "cadet" },
+    2: { priceId: "price_1R1VYyQHjri1zl3J8Dc1i5em", plan: "challenger" },
   };
 
-  if (!productPrices[productId]) {
+  if (!productPlans[productId]) {
     return res
       .status(400)
       .json({ success: false, message: "Invalid product ID" });
@@ -29,13 +29,15 @@ router.post("/create-checkout-session", async (req, res) => {
       payment_method_types: ["card"],
       line_items: [
         {
-          price: productPrices[productId],
+          price: productPlans[productId].priceId,
           quantity: 1,
         },
       ],
       mode: "subscription", // For recurring payments
       success_url: "http://localhost:3000/success",
       cancel_url: "http://localhost:3000/cancel",
+      customer_email: email, // ✅ Attach user email
+      metadata: { plan: productPlans[productId].plan }, // ✅ Store the plan name in metadata
     });
 
     res.json({
@@ -57,30 +59,57 @@ router.post(
   async (req, res) => {
     const sig = req.headers["stripe-signature"];
 
-    let event;
     try {
-      event = stripe.webhooks.constructEvent(
+      const event = stripe.webhooks.constructEvent(
         req.body,
         sig,
         process.env.STRIPE_WEBHOOK_SECRET
       );
+
+      console.log(`🔹 Received Stripe Event: ${event.type}`);
+      console.log(`🔹 Event Data:`, event.data.object);
+
+      switch (event.type) {
+        case "checkout.session.completed":
+          console.log("✅ Checkout Session Completed:", event.data.object);
+
+          const session = event.data.object;
+          const email = session.customer_details.email;
+          const plan = session.metadata.plan;
+          const subscriptionId = session.subscription;
+
+          // ✅ Store subscription in database
+          await sql`
+          UPDATE users 
+          SET subscription_id = ${subscriptionId}, plan = ${plan}, subscribed_at = NOW()
+          WHERE email = ${email}
+        `;
+
+          console.log(`✅ Subscription activated for ${email}: ${plan}`);
+          break;
+
+        case "invoice.payment_succeeded":
+          console.log("✅ Invoice Payment Succeeded:", event.data.object);
+          break;
+
+        case "customer.subscription.deleted":
+          console.log("🔹 Subscription canceled:", event.data.object.id);
+          const canceledEmail = event.data.object.customer_email; // Get customer email
+          await sql`
+            UPDATE users SET subscription_status = 'canceled', subscription_expires_at = NOW()
+            WHERE email = ${canceledEmail}
+          `;
+          break;
+
+        default:
+          console.log(`⚠️ Unhandled event type: ${event.type}`);
+      }
+
+      res.status(200).send();
     } catch (err) {
-      console.error("Webhook signature verification failed.", err.message);
-      return res.status(400).send(`Webhook Error: ${err.message}`);
+      console.error("❌ Error handling webhook:", err);
+      res.status(400).send(`Webhook Error: ${err.message}`);
     }
-
-    // Handles different event types
-    switch (event.type) {
-      case "checkout.session.completed":
-        const session = event.data.object;
-        console.log("Payment Successful:", session);
-        // Able to now update the database, activate subscriptions, etc.
-        break;
-      default:
-        console.log(`Unhandled event type: ${event.type}`);
-    }
-
-    res.json({ received: true });
   }
 );
 

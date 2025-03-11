@@ -1,6 +1,7 @@
 import { sql } from "./db.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { validationResult } from "express-validator";
 
 export const getUsers = async (req, res) => {
   try {
@@ -17,22 +18,17 @@ export const getUsers = async (req, res) => {
 };
 
 export const createUser = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
   const { first_name, last_name, email, password } = req.body;
 
   if (!first_name || !last_name || !email || !password) {
     return res
       .status(400)
       .json({ success: false, message: "All fields are required." });
-  }
-
-  const existingUser = await sql`
-    SELECT * FROM users WHERE email = ${email} LIMIT 1;
-  `;
-  
-  if (existingUser.length > 0) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Email already exists." });
   }
 
   // Hash the password before storing it

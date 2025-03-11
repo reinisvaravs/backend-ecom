@@ -1,5 +1,7 @@
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
+import { body } from "express-validator";
+
 dotenv.config();
 
 export const authenticateUser = (req, res, next) => {
@@ -21,3 +23,10 @@ export const authenticateUser = (req, res, next) => {
       .json({ success: false, message: "Invalid or expired token." });
   }
 };
+
+export const validateRegister = [
+  body("email").isEmail().withMessage("Invalid email"),
+  body("password")
+    .isLength({ min: 6 })
+    .withMessage("Password must be at least 6 characters long"),
+];

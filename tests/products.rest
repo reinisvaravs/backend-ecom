@@ -1,0 +1,10 @@
+
+
+### Get All Products
+GET http://localhost:3000/api/products
+
+### Get a Single Product (Cadet)
+GET http://localhost:3000/api/products/1
+
+### Get a Single Product (Invalid ID)
+GET http://localhost:3000/api/products/10

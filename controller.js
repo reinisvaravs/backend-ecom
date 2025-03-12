@@ -1,7 +1,6 @@
 import { sql } from "./db.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { validationResult } from "express-validator";
 
 export const getUsers = async (req, res) => {
   try {
@@ -18,11 +17,6 @@ export const getUsers = async (req, res) => {
 };
 
 export const createUser = async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
-
   const { first_name, last_name, email, password } = req.body;
 
   if (!first_name || !last_name || !email || !password) {
@@ -57,10 +51,18 @@ export const getUser = async (req, res) => {
         SELECT * FROM users WHERE id=${id}
     `;
 
-    res.status(200).json({ success: true, data: user[0] });
+    if (user.length === 0) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    return res.status(200).json({ success: true, data: user[0] });
   } catch (error) {
     console.log("Error in getUser function", error);
-    res.status(500).json({ success: false, message: "Internal Server Error" });
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal Server Error" });
   }
 };
 
@@ -173,31 +175,7 @@ export const loginUser = async (req, res) => {
 };
 
 export const logoutUser = (req, res) => {
-  res.clearCookie("token", {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production", // Only secure in production
-    sameSite: "strict",
-  });
-
   return res
     .status(200)
     .json({ success: true, message: "Logged out successfully" });
-};
-
-export const accessProfile = async (req, res) => {
-  try {
-    const user = await sql`
-        SELECT id, first_name, last_name, email FROM users WHERE id = ${req.user.id};
-    `;
-
-    if (user.length === 0) {
-      return res
-        .status(404)
-        .json({ success: false, message: "User not found." });
-    }
-
-    res.status(200).json({ success: true, data: user[0] });
-  } catch (error) {
-    res.status(500).json({ success: false, message: "Internal Server Error" });
-  }
 };

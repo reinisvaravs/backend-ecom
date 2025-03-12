@@ -7,9 +7,9 @@ POST http://localhost:3000/api/users
 Content-Type: application/json
 
 {
-    "first_name": "Roberts",
-    "last_name": "Vāravs",
-    "email": "reinis8532@gmail.com",
+    "first_name": "Rei",
+    "last_name": "Ro",
+    "email": "reinis123456@gmail.com",
     "password": "123456"
 }
 
@@ -17,7 +17,7 @@ Content-Type: application/json
 GET http://localhost:3000/api/users/1
 
 ###    DELETE user    /api/users/:id
-DELETE http://localhost:3000/api/users/13
+DELETE http://localhost:3000/api/users/17
 
 ###    EDIT user    /api/users/:id   +   all fields
 PUT http://localhost:3000/api/users/5

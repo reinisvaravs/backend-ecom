@@ -1,6 +1,7 @@
 import { sql } from "./db.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { validationResult } from "express-validator";
 
 export const getUsers = async (req, res) => {
   try {
@@ -9,14 +10,25 @@ export const getUsers = async (req, res) => {
             ORDER BY created_at DESC
         `;
     console.log("fetched users: ", users);
-    res.status(200).json({ success: true, data: users });
+    return res.status(200).json({ success: true, data: users });
   } catch (error) {
     console.log("Error in getUsers function", error);
-    res.status(500).json({ success: false, message: "Internal Server Error" });
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal Server Error" });
   }
 };
 
 export const createUser = async (req, res) => {
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    return res.status(400).json({
+      success: false,
+      errors: errors.array(),
+    });
+  }
+
   const { first_name, last_name, email, password } = req.body;
 
   if (!first_name || !last_name || !email || !password) {
@@ -36,10 +48,12 @@ export const createUser = async (req, res) => {
     `;
 
     console.log("new user added: ", newUser);
-    res.status(201).json({ success: true, data: newUser[0] });
+    return res.status(201).json({ success: true, data: newUser[0] });
   } catch (error) {
     console.log("Error in createUser function", error);
-    res.status(500).json({ success: false, message: "Internal Server Error" });
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal Server Error" });
   }
 };
 
@@ -89,10 +103,12 @@ export const updateUser = async (req, res) => {
         .json({ success: false, message: "User not found" });
     }
 
-    res.status(200).json({ success: true, data: updatedUser[0] });
+    return res.status(200).json({ success: true, data: updatedUser[0] });
   } catch (error) {
     console.log("Error in updateUser function", error);
-    res.status(500).json({ success: false, message: "Internal Server Error" });
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal Server Error" });
   }
 };
 
@@ -110,14 +126,25 @@ export const deleteUser = async (req, res) => {
         .json({ success: false, message: "User not found" });
     }
 
-    res.status(200).json({ success: true, data: deletedUser[0] });
+    return res.status(200).json({ success: true, data: deletedUser[0] });
   } catch (error) {
     console.log("Error in deleteUser function", error);
-    res.status(500).json({ success: false, message: "Internal Server Error" });
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal Server Error" });
   }
 };
 
 export const loginUser = async (req, res) => {
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    return res.status(400).json({
+      success: false,
+      errors: errors.array(),
+    });
+  }
+
   const { email, password } = req.body;
 
   try {
@@ -151,26 +178,16 @@ export const loginUser = async (req, res) => {
       { expiresIn: "1h" }
     );
 
-    res.cookie("token", token, {
-      httpOnly: true, // JavaScript cannot access this cookie (prevents XSS attacks)
-      secure: process.env.NODE_ENV === "production", // Only secure in production
-      sameSite: "strict", // Prevent CSRF attacks
-      maxAge: 60 * 60 * 1000, // Cookie expires in 1 hour (optional)
-    });
-
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: "Logged in successfully",
-      user: {
-        id: existingUser.id,
-        email: existingUser.email,
-        first_name: existingUser.first_name,
-        last_name: existingUser.last_name,
-      },
+      token,
     });
   } catch (error) {
     console.log("Error in loginUser function", error);
-    res.status(500).json({ success: false, message: "Internal Server Error" });
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal Server Error" });
   }
 };
 

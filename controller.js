@@ -10,7 +10,7 @@ export const getUsers = async (req, res) => {
             ORDER BY created_at DESC
         `;
     console.log("fetched users: ", users);
-    return res.status(200).json({ success: true, data: users });
+    res.status(200).json({ success: true, data: users });
   } catch (error) {
     console.log("Error in getUsers function", error);
     return res
@@ -48,7 +48,7 @@ export const createUser = async (req, res) => {
     `;
 
     console.log("new user added: ", newUser);
-    return res.status(201).json({ success: true, data: newUser[0] });
+    res.status(201).json({ success: true, data: newUser[0] });
   } catch (error) {
     console.log("Error in createUser function", error);
     return res
@@ -71,7 +71,7 @@ export const getUser = async (req, res) => {
         .json({ success: false, message: "User not found" });
     }
 
-    return res.status(200).json({ success: true, data: user[0] });
+    res.status(200).json({ success: true, data: user[0] });
   } catch (error) {
     console.log("Error in getUser function", error);
     return res
@@ -103,7 +103,7 @@ export const updateUser = async (req, res) => {
         .json({ success: false, message: "User not found" });
     }
 
-    return res.status(200).json({ success: true, data: updatedUser[0] });
+    res.status(200).json({ success: true, data: updatedUser[0] });
   } catch (error) {
     console.log("Error in updateUser function", error);
     return res
@@ -126,7 +126,7 @@ export const deleteUser = async (req, res) => {
         .json({ success: false, message: "User not found" });
     }
 
-    return res.status(200).json({ success: true, data: deletedUser[0] });
+    res.status(200).json({ success: true, data: deletedUser[0] });
   } catch (error) {
     console.log("Error in deleteUser function", error);
     return res
@@ -178,7 +178,7 @@ export const loginUser = async (req, res) => {
       { expiresIn: "1h" }
     );
 
-    return res.status(200).json({
+    res.status(200).json({
       success: true,
       message: "Logged in successfully",
       token,
@@ -192,7 +192,5 @@ export const loginUser = async (req, res) => {
 };
 
 export const logoutUser = (req, res) => {
-  return res
-    .status(200)
-    .json({ success: true, message: "Logged out successfully" });
+  res.status(200).json({ success: true, message: "Logged out successfully" });
 };

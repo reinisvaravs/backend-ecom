@@ -1,0 +1,32 @@
+
+### GET tests stripe
+GET http://localhost:3000/api/stripe/test
+
+
+### Create a Checkout Session (Via Your Backend)
+POST http://localhost:3000/api/stripe/create-checkout-session
+Content-Type: application/json
+
+{
+  "plan": "cadet",
+  "email": "reinis123456@gmail.com"
+}
+
+### cancel sub
+POST http://localhost:3000/api/stripe/cancel-subscription
+Content-Type: application/json
+
+{
+  "email": "reinis123456@gmail.com"
+}
+
+
+
+### Get All Products
+GET http://localhost:3000/api/products
+
+### Get a Single Product (Cadet)
+GET http://localhost:3000/api/products/1
+
+### Get a Single Product (Invalid ID)
+GET http://localhost:3000/api/products/10

@@ -10,7 +10,15 @@ const inputValidation = [
 ];
 
 router.get("/", (req, res) => {
-  res.send("Hello from the backend");
+  res.send("Hello from the backend 🧌");
+});
+
+router.get("/success", (req, res) => {
+  res.send("Your payment has been successfull");
+});
+
+router.get("/cancel", (req, res) => {
+  res.send("You successfully canceled your subscription");
 });
 
 router.post("/login", inputValidation, loginUser);

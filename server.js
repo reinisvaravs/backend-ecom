@@ -4,17 +4,33 @@ import { sql } from "./db.js";
 import userRoutes from "./routes/userRoutes.js";
 import rootRoutes from "./routes/rootRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
+import stripeRoutes from "./routes/stripeRoutes.js";
 
 dotenv.config();
 
 const app = express();
 
-app.use(express.json());
+// Apply express.json() only to non-webhook routes
+app.use((req, res, next) => {
+  if (req.path !== "/api/stripe/webhook") {
+    express.json()(req, res, next); // Use express.json() for all other routes
+  } else {
+    next(); // Skip express.json() for webhook
+  }
+});
 const PORT = process.env.PORT || 3000;
 
 app.use("/", rootRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/products", productRoutes);
+
+app.use("/api/stripe/webhook", express.raw({ type: "application/json" }));
+app.use("/api/stripe", stripeRoutes);
+
+// Test Route for Stripe
+app.get("/api/stripe/test", (req, res) => {
+  res.json({ success: true, message: "Stripe is set up correctly!" });
+});
 
 async function initDB() {
   try {
@@ -29,7 +45,7 @@ async function initDB() {
         )
     `;
 
-    console.log("Database initialized successfully");
+    console.log("🗄️ Database initialized successfully");
   } catch (error) {
     console.log("Error initDB", error);
   }
@@ -37,6 +53,6 @@ async function initDB() {
 
 initDB().then(() => {
   app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+    console.log(`✅Server is running on port ${PORT}`);
   });
 });

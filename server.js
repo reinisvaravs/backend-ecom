@@ -18,7 +18,7 @@ app.use((req, res, next) => {
     next(); // Skip express.json() for webhook
   }
 });
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8383;
 
 app.use("/", rootRoutes);
 app.use("/api/users", userRoutes);

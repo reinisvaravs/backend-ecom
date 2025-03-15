@@ -11,12 +11,30 @@ import { body } from "express-validator";
 const router = express.Router();
 
 const inputValidation = [
-  body("first_name").notEmpty().withMessage("First name is required"),
-  body("last_name").notEmpty().withMessage("Last name is required"),
-  body("email").isEmail().withMessage("Invalid email format"),
+  body("first_name")
+    .trim()
+    .matches(/^[A-Za-zÀ-ÖØ-öø-ÿ\s'-]+$/)
+    .withMessage("First name must contain only letters"),
+  body("last_name")
+    .trim()
+    .matches(/^[A-Za-zÀ-ÖØ-öø-ÿ\s'-]+$/)
+    .withMessage("Last name must contain only letters"),
+  body("email")
+    .trim()
+    .normalizeEmail()
+    .isEmail()
+    .withMessage("Invalid email format"),
   body("password")
     .isLength({ min: 6 })
-    .withMessage("Password must be at least 6 characters long"),
+    .withMessage("Password must be at least 6 characters long")
+    .matches(/[a-z]/)
+    .withMessage("Password must contain at least one lowercase letter")
+    .matches(/[A-Z]/)
+    .withMessage("Password must contain at least one uppercase letter")
+    .matches(/\d/)
+    .withMessage("Password must contain at least one number")
+    .matches(/[!@#$%^&*(),.?":{}|<>]/)
+    .withMessage("Password must contain at least one special character"),
 ];
 
 //  "localhost:3000/api/users/"

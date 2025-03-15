@@ -1,26 +1,26 @@
 
 ###    GET all users
-GET http://localhost:3000/api/users
+GET http://localhost:8383/api/users
 
 ###    POST user  (all fields)
-POST http://localhost:3000/api/users
+POST http://localhost:8383/api/users
 Content-Type: application/json
 
 {
-    "first_name": "Santa",
-    "last_name": "Mīļā",
-    "email": "santa.varava@gmail.com",
+    "first_name": "Reinis",
+    "last_name": "Vāravs",
+    "email": "reinisroberts.varavs2@gmail.com",
     "password": "123456"
 }
 
 ###    GET user    /api/users/:id
-GET http://localhost:3000/api/users/1
+GET http://localhost:8383/api/users/1
 
 ###    DELETE user    /api/users/:id
-DELETE http://localhost:3000/api/users/17
+DELETE http://localhost:8383/api/users/20
 
 ###    EDIT user    /api/users/:id   +   all fields
-PUT http://localhost:3000/api/users/5
+PUT http://localhost:8383/api/users/5
 Content-Type: application/json
 
 {
@@ -31,13 +31,13 @@ Content-Type: application/json
 }
 
 ### LOGIN USER
-POST http://localhost:3000/login
+POST http://localhost:8383/login
 Content-Type: application/json
 
 {
-    "email": "santa.varava@gmail.com",
+    "email": "reinisroberts.varavs2@gmail.com",
     "password": "123456"
 }
 
 ### Logout User
-POST http://localhost:3000/logout
+POST http://localhost:8383/logout

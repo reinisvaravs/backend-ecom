@@ -2,26 +2,49 @@ import express from "express";
 import Stripe from "stripe";
 import dotenv from "dotenv";
 import { sql } from "../db.js";
+import { validationResult } from "express-validator";
+import bcrypt from "bcrypt";
+import inputValidation from "./userRoutes.js"
 
 dotenv.config();
 
 const router = express.Router();
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-router.post("/create-checkout-session", async (req, res) => {
-  const { plan, email } = req.body;
+router.post("/create-checkout-session", inputValidation, async (req, res) => {
+  console.log("🟡 Raw Request Body:", req.body);
 
-  // Check if the user exists in the db
+  const errors = validationResult(req);
+  if (!errors || !errors.isEmpty()) {
+    console.log("🔴 Validation Errors:", errors.array());
+    return res.status(400).json({ success: false, errors: errors.array() });
+  }
+
+  const { plan, email, first_name, last_name, password } = req.body;
+  console.log("🟢 Extracted Fields:", { email, plan });
+
   try {
-    const user = await sql`SELECT * FROM users WHERE email = ${email} LIMIT 1;`;
+    // ✅ Check if user already exists
+    let user = await sql`SELECT * FROM users WHERE email = ${email} LIMIT 1;`;
 
     if (user.length === 0) {
-      return res
-        .status(404)
-        .json({ success: false, message: "User not found" });
+      // ✅ Hash the password before storing it
+      const hashedPassword = await bcrypt.hash(password, 10); // 10 salt rounds
+
+      // ✅ Insert user with hashed password
+      await sql`
+        INSERT INTO users (first_name, last_name, email, password, subscription_id, plan, subscribed_at)
+        VALUES (${first_name}, ${last_name}, ${email}, ${hashedPassword}, NULL, NULL, NULL);
+      `;
+      console.log(`🟢 New user registered: ${email}`);
+
+      // ✅ Retrieve the newly created user
+      user = await sql`SELECT * FROM users WHERE email = ${email} LIMIT 1;`;
+    } else {
+      console.log(`🟡 User already exists: ${email}`);
     }
 
-    // Checks if the user already has an active sub
+    // ✅ Prevent multiple active subscriptions
     const existingSubscription = await sql`
       SELECT * FROM users WHERE email = ${email} AND subscription_id IS NOT NULL LIMIT 1;
     `;
@@ -32,22 +55,20 @@ router.post("/create-checkout-session", async (req, res) => {
         message: "User already has an active subscription",
       });
     }
-  } catch (error) {
-    return res.status(500).json({ success: false, message: "Database error" });
-  }
 
-  const prices = {
-    cadet: "price_1R1VV3QHjri1zl3JyVpFFw5b",
-    challenger: "price_1R1VYyQHjri1zl3J8Dc1i5em",
-  };
+    // ✅ Define Stripe prices
+    const prices = {
+      cadet: "price_1R1VV3QHjri1zl3JyVpFFw5b",
+      challenger: "price_1R1VYyQHjri1zl3J8Dc1i5em",
+    };
 
-  if (!prices[plan]) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Invalid plan name" });
-  }
+    if (!prices[plan]) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid plan name" });
+    }
 
-  try {
+    // ✅ Create Stripe checkout session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       mode: "subscription",
@@ -58,7 +79,7 @@ router.post("/create-checkout-session", async (req, res) => {
           quantity: 1,
         },
       ],
-      metadata: { plan: plan },
+      metadata: { plan },
       success_url: "http://localhost:3000/success",
       cancel_url: "http://localhost:3000/cancel",
     });
@@ -67,6 +88,7 @@ router.post("/create-checkout-session", async (req, res) => {
       .status(200)
       .json({ success: true, sessionId: session.id, url: session.url });
   } catch (error) {
+    console.error("❌ Error:", error.message);
     return res.status(500).json({ success: false, message: error.message });
   }
 });

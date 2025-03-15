@@ -5,10 +5,29 @@ import userRoutes from "./routes/userRoutes.js";
 import rootRoutes from "./routes/rootRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
 import stripeRoutes from "./routes/stripeRoutes.js";
+import cors from "cors";
 
 dotenv.config();
 
 const app = express();
+app.use(express.static("public"));
+
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://reinisvaravs.com", 
+];
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true, // Allow cookies/auth headers if needed
+  })
+);
 
 // Apply express.json() only to non-webhook routes
 app.use((req, res, next) => {

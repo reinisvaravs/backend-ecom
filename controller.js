@@ -148,8 +148,11 @@ export const loginUser = async (req, res) => {
   const { email, password } = req.body;
 
   try {
+    // ✅ Normalize email for lookup
+    const normalizedEmail = email.trim().toLowerCase();
+
     const user = await sql`
-        SELECT * FROM users WHERE email = ${email} LIMIT 1;
+        SELECT * FROM users WHERE LOWER(email) = LOWER(${normalizedEmail}) LIMIT 1;
     `;
 
     if (user.length === 0) {
@@ -161,10 +164,8 @@ export const loginUser = async (req, res) => {
 
     const existingUser = user[0];
 
-    const isPasswordValid = await bcrypt.compare(
-      password,
-      existingUser.password
-    );
+    // 🔐 Compare hashed password
+    const isPasswordValid = await bcrypt.compare(password, existingUser.password);
 
     if (!isPasswordValid) {
       return res
@@ -172,6 +173,7 @@ export const loginUser = async (req, res) => {
         .json({ success: false, message: "Invalid credentials" });
     }
 
+    // 🔑 Generate JWT token
     const token = jwt.sign(
       { id: existingUser.id, email: existingUser.email },
       process.env.JWT_SECRET,
@@ -190,6 +192,7 @@ export const loginUser = async (req, res) => {
       .json({ success: false, message: "Internal Server Error" });
   }
 };
+
 
 export const logoutUser = (req, res) => {
   res.status(200).json({ success: true, message: "Logged out successfully" });

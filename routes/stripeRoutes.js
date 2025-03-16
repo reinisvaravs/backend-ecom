@@ -6,6 +6,7 @@ import { body, validationResult } from "express-validator";
 import bcrypt from "bcrypt";
 
 dotenv.config();
+//    btw    /api/stripe
 
 const router = express.Router();
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
@@ -83,9 +84,10 @@ router.post("/create-checkout-session", inputValidation, async (req, res) => {
     `;
 
     if (existingSubscription.length > 0) {
-      return res.status(400).json({
-        success: false,
+      return res.status(200).json({
+        success: true,
         message: "User already has an active subscription",
+        redirect: "/auth",
       });
     }
 
@@ -236,6 +238,35 @@ router.post("/cancel-subscription", async (req, res) => {
   } catch (error) {
     console.error("Error canceling subscription:", error.message);
     return res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+router.post("/check-user", async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Email is required" });
+  }
+
+  try {
+    const user = await sql`SELECT * FROM users WHERE email = ${email} LIMIT 1;`;
+
+    if (user.length > 0) {
+      return res
+        .status(200)
+        .json({
+          success: true,
+          message: "User already exists",
+          redirect: "/auth",
+        });
+    }
+
+    res.status(200).json({ success: false, message: "User does not exist" });
+  } catch (error) {
+    console.error("Error checking user:", error);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 });
 

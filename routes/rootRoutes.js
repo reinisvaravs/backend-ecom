@@ -1,5 +1,5 @@
 import express from "express";
-import { loginUser, logoutUser, getUserProfile } from "../controller.js";
+import { loginUser, getUserProfile } from "../controller.js";
 import { body } from "express-validator";
 import path from "path";
 import { fileURLToPath } from "url";

@@ -1,8 +1,9 @@
 import express from "express";
-import { loginUser, logoutUser } from "../controller.js";
+import { loginUser, logoutUser, getUserProfile } from "../controller.js";
 import { body } from "express-validator";
 import path from "path";
 import { fileURLToPath } from "url";
+import authMiddleware from "../authMiddleware.js";
 
 const router = express.Router();
 
@@ -32,6 +33,7 @@ router.get("/cancel", (req, res) => {
 
 router.post("/api/login", inputValidation, loginUser);
 
-router.post("/api/logout", logoutUser);
+// ✅ Protected route: Only accessible with a valid token
+router.get("/api/profile", authMiddleware, getUserProfile);
 
 export default router;

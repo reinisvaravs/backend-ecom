@@ -3,21 +3,6 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { validationResult } from "express-validator";
 
-export const getUsers = async (req, res) => {
-  // try {
-  //   const users = await sql`
-  //           SELECT * FROM users
-  //           ORDER BY created_at DESC
-  //       `;
-  //   console.log("fetched users: ", users);
-  //   res.status(200).json({ success: true, data: users });
-  // } catch (error) {
-  //   console.log("Error in getUsers function", error);
-  //   return res
-  //     .status(500)
-  //     .json({ success: false, message: "Internal Server Error" });
-  // }
-};
 
 export const createUser = async (req, res) => {
   const errors = validationResult(req);
@@ -55,84 +40,6 @@ export const createUser = async (req, res) => {
       .status(500)
       .json({ success: false, message: "Internal Server Error" });
   }
-};
-
-export const getUser = async (req, res) => {
-  // const { id } = req.params;
-
-  // try {
-  //   const user = await sql`
-  //       SELECT * FROM users WHERE id=${id}
-  //   `;
-
-  //   if (user.length === 0) {
-  //     return res
-  //       .status(404)
-  //       .json({ success: false, message: "User not found" });
-  //   }
-
-  //   res.status(200).json({ success: true, data: user[0] });
-  // } catch (error) {
-  //   console.log("Error in getUser function", error);
-  //   return res
-  //     .status(500)
-  //     .json({ success: false, message: "Internal Server Error" });
-  // }
-};
-
-export const updateUser = async (req, res) => {
-  // const { id } = req.params;
-  // const { first_name, last_name, email, password } = req.body;
-
-  // try {
-  //   let hashedPassword = null;
-
-  //   if (password) {
-  //     hashedPassword = await bcrypt.hash(password, 10);
-  //   }
-
-  //   const updatedUser = await sql`
-  //       UPDATE users
-  //       SET first_name=${first_name}, last_name=${last_name}, email=${email}, password=COALESCE(${hashedPassword}, password)
-  //       WHERE id=${id}
-  //       RETURNING *
-  //   `;
-  //   if (updatedUser.length === 0) {
-  //     return res
-  //       .status(404)
-  //       .json({ success: false, message: "User not found" });
-  //   }
-
-  //   res.status(200).json({ success: true, data: updatedUser[0] });
-  // } catch (error) {
-  //   console.log("Error in updateUser function", error);
-  //   return res
-  //     .status(500)
-  //     .json({ success: false, message: "Internal Server Error" });
-  // }
-};
-
-export const deleteUser = async (req, res) => {
-  // const { id } = req.params;
-
-  // try {
-  //   const deletedUser = await sql`
-  //       DELETE FROM users WHERE id=${id} RETURNING *
-  //   `;
-
-  //   if (deletedUser.length === 0) {
-  //     return res
-  //       .status(404)
-  //       .json({ success: false, message: "User not found" });
-  //   }
-
-  //   res.status(200).json({ success: true, data: deletedUser[0] });
-  // } catch (error) {
-  //   console.log("Error in deleteUser function", error);
-  //   return res
-  //     .status(500)
-  //     .json({ success: false, message: "Internal Server Error" });
-  // }
 };
 
 export const loginUser = async (req, res) => {

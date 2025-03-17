@@ -9,3 +9,4 @@ dist/
 build/
 todo.txt
 test.rest
+tests/

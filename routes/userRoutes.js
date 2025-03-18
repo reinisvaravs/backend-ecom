@@ -1,6 +1,6 @@
 import express from "express";
 import { createUser } from "../controller.js";
-import inputValidation from "./stripeRoutes.js";
+import inputValidation from "../controller.js";
 
 const router = express.Router();
 

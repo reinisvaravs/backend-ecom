@@ -1,6 +1,6 @@
 import Stripe from "stripe";
 import dotenv from "dotenv";
-import { sql } from "../db.js";
+import { sql } from "./db";
 import { body, validationResult } from "express-validator";
 import bcrypt from "bcrypt";
 

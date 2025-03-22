@@ -12,10 +12,7 @@ dotenv.config();
 const app = express();
 app.use(express.static("public"));
 
-const allowedOrigins = [
-  "http://localhost:3000",
-  "https://reinisvaravs.com", 
-];
+const allowedOrigins = ["http://localhost:3000", "https://reinisvaravs.com"];
 app.use(
   cors({
     origin: function (origin, callback) {
@@ -49,6 +46,11 @@ app.use("/api/stripe", stripeRoutes);
 // Test Route for Stripe
 app.get("/api/stripe/test", (req, res) => {
   res.json({ success: true, message: "Stripe is set up correctly!" });
+});
+
+// Ping Pong to wake up the backend
+app.get("/api/ping", (req, res) => {
+  res.status(200).json({ message: "pong" });
 });
 
 async function initDB() {

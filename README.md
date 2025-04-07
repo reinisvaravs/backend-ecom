@@ -15,23 +15,25 @@ This is the backend API for my full-stack e-commerce store, built with **Node.js
 
 ## 📦 Tech Stack
 
-- Node.js
-- Express.js
-- PostgreSQL
-- JWT Authentication
-- Stripe API
-- Render.com (for deployment)
+- Node.js + Express.js (API & server)
+- PostgreSQL (NeonDB, with optional pgvector)
+- Stripe API (subscription-based payments)
+- JSON Web Tokens (JWT) for auth
+- Express Validator for input validation
+- bcrypt for password hashing
+- Render.com (cloud hosting + auto-deploy)
 
 ---
 
 ## 🧠 Features
 
-- 🧾 RESTful API with secure routing
-- 🔐 JWT-based user authentication
-- 🛍️ Product and order management
-- 💳 Stripe integration for payments
-- 📦 PostgreSQL database with pgvector support
-- 🌍 CORS support for frontend communication
+- 🔐 User registration & login with JWT auth
+- 🧾 RESTful API using Express Router
+- 🔄 Stripe subscriptions (checkout + webhook)
+- 📧 Email-based plan management
+- 🧪 REST Client test suite for local testing
+- 📦 PostgreSQL + pgvector-ready database
+- 🌍 CORS-enabled API access for frontend
 
 ---
 
@@ -109,13 +111,19 @@ backend-ecom/
 
 ## 🔌 API Endpoints
 
-| Method | Endpoint             | Description                |
-| ------ | -------------------- | -------------------------- |
-| POST   | `/api/auth/register` | Register new user          |
-| POST   | `/api/auth/login`    | Authenticate existing user |
-| GET    | `/api/products`      | Get all products           |
-| POST   | `/api/checkout`      | Create Stripe checkout     |
-| GET    | `/api/orders`        | Get user order history     |
+| Method | Endpoint                              | Description                     |
+| ------ | ------------------------------------- | ------------------------------- |
+| POST   | `/api/users`                          | Register new user               |
+| POST   | `/api/login`                          | Authenticate existing user      |
+| GET    | `/api/profile`                        | Get user profile (JWT required) |
+| GET    | `/api/products`                       | Get all products/plans          |
+| GET    | `/api/products/:id`                   | Get product by ID               |
+| POST   | `/api/stripe/create-checkout-session` | Create Stripe checkout session  |
+| POST   | `/api/stripe/check-user`              | Check if user exists            |
+| POST   | `/api/stripe/cancel-subscription`     | Cancel user's subscription      |
+| POST   | `/api/stripe/webhook`                 | Stripe webhook handler          |
+| GET    | `/api/ping`                           | Health check (pong)             |
+| GET    | `/api/stripe/test`                    | Test Stripe configuration       |
 
 ---
 

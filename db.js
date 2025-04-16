@@ -3,9 +3,8 @@ import { neon } from "@neondatabase/serverless";
 
 dotenv.config();
 
-const { PGHOST, PGDATABASE, PGUSER, PGPASSWORD } = process.env;
+// Use the DATABASE_URL environment variable
+const { DATABASE_URL } = process.env;
 
-// creates a SQL connection using nvm variables
-export const sql = neon(
-  `postgresql://${PGUSER}:${PGPASSWORD}@${PGHOST}/${PGDATABASE}?sslmode=require`
-);
+// Create a SQL connection using the connection string
+export const sql = neon(DATABASE_URL);

@@ -55,15 +55,70 @@ app.get("/api/ping", (req, res) => {
 
 async function initDB() {
   try {
+    // Users table
     await sql`
         CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY,
             first_name VARCHAR(255) NOT NULL,
             last_name VARCHAR(255) NOT NULL,
-            email VARCHAR(255) NOT NULL,
+            email VARCHAR(255) NOT NULL UNIQUE,
             password TEXT NOT NULL,
+            plan VARCHAR(50),
+            subscription_id VARCHAR(255),
+            subscribed_at TIMESTAMP,
+            subscription_status VARCHAR(50),
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
+    `;
+
+    // Products table
+    await sql`
+        CREATE TABLE IF NOT EXISTS products (
+            id SERIAL PRIMARY KEY,
+            name VARCHAR(255) NOT NULL,
+            price DECIMAL(10,2) NOT NULL,
+            billing_period VARCHAR(50) NOT NULL,
+            stripe_price_id VARCHAR(255) NOT NULL UNIQUE,
+            description TEXT[],
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    `;
+
+    // Subscription History table
+    await sql`
+        CREATE TABLE IF NOT EXISTS subscription_history (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES users(id),
+            plan VARCHAR(50) NOT NULL,
+            subscription_id VARCHAR(255) NOT NULL,
+            status VARCHAR(50) NOT NULL,
+            started_at TIMESTAMP NOT NULL,
+            ended_at TIMESTAMP,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    `;
+
+    // Payment History table
+    await sql`
+        CREATE TABLE IF NOT EXISTS payment_history (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES users(id),
+            subscription_id VARCHAR(255) NOT NULL,
+            amount DECIMAL(10,2) NOT NULL,
+            currency VARCHAR(3) NOT NULL DEFAULT 'USD',
+            status VARCHAR(50) NOT NULL,
+            stripe_payment_id VARCHAR(255) NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    `;
+
+    // Insert default products if they don't exist
+    await sql`
+        INSERT INTO products (name, price, billing_period, stripe_price_id, description)
+        VALUES 
+            ('Cadet', 49.99, 'monthly', 'price_1R1VV3QHjri1zl3JyVpFFw5b', ARRAY['Access to all TRW Campuses', 'Daily live broadcasts', 'Daily course updates']),
+            ('Challenger', 149.00, '3 months', 'price_1R1VYyQHjri1zl3J8Dc1i5em', ARRAY['All of Cadet', 'Daily coin bonus', 'Power level boost'])
+        ON CONFLICT (stripe_price_id) DO NOTHING
     `;
 
     console.log("🗄️ Database initialized successfully");

@@ -176,7 +176,11 @@ export const stripeWebhook = async (req, res) => {
   try {
     await sql`
         UPDATE users
-        SET subscription_id = ${subscriptionId}, plan = ${plan}, subscribed_at = NOW()
+        SET 
+            subscription_id = ${subscriptionId}, 
+            plan = ${plan}, 
+            subscribed_at = NOW(),
+            subscription_status = 'active'
         WHERE email = ${email};
       `;
 

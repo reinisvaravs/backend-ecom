@@ -3,7 +3,6 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { validationResult } from "express-validator";
 
-
 export const createUser = async (req, res) => {
   const errors = validationResult(req);
 
@@ -27,8 +26,28 @@ export const createUser = async (req, res) => {
 
   try {
     const newUser = await sql`
-        INSERT INTO users (first_name, last_name, email, password)
-        VALUES (${first_name}, ${last_name}, ${email}, ${hashedPassword})
+        INSERT INTO users (
+            first_name, 
+            last_name, 
+            email, 
+            password,
+            plan,
+            subscription_id,
+            subscribed_at,
+            subscription_status,
+            created_at
+        )
+        VALUES (
+            ${first_name}, 
+            ${last_name}, 
+            ${email}, 
+            ${hashedPassword},
+            NULL,
+            NULL,
+            NULL,
+            'inactive',
+            CURRENT_TIMESTAMP
+        )
         RETURNING *
     `;
 
@@ -76,7 +95,7 @@ export const loginUser = async (req, res) => {
       { expiresIn: "1h" }
     );
 
-    console.log(user)
+    console.log(user);
 
     // ✅ Send response with token & user data
     res.json({
@@ -100,10 +119,13 @@ export const loginUser = async (req, res) => {
 export const getUserProfile = async (req, res) => {
   try {
     const userId = req.user.id; // ✅ Extract user ID from token
-    const user = await sql`SELECT id, first_name, last_name, email, plan, subscribed_at FROM users WHERE id = ${userId} LIMIT 1;`;
+    const user =
+      await sql`SELECT id, first_name, last_name, email, plan, subscribed_at FROM users WHERE id = ${userId} LIMIT 1;`;
 
     if (!user.length) {
-      return res.status(404).json({ success: false, message: "User not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
     }
 
     res.status(200).json({ success: true, user: user[0] });

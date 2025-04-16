@@ -84,34 +84,6 @@ async function initDB() {
         )
     `;
 
-    // Subscription History table
-    await sql`
-        CREATE TABLE IF NOT EXISTS subscription_history (
-            id SERIAL PRIMARY KEY,
-            user_id INTEGER REFERENCES users(id),
-            plan VARCHAR(50) NOT NULL,
-            subscription_id VARCHAR(255) NOT NULL,
-            status VARCHAR(50) NOT NULL,
-            started_at TIMESTAMP NOT NULL,
-            ended_at TIMESTAMP,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    `;
-
-    // Payment History table
-    await sql`
-        CREATE TABLE IF NOT EXISTS payment_history (
-            id SERIAL PRIMARY KEY,
-            user_id INTEGER REFERENCES users(id),
-            subscription_id VARCHAR(255) NOT NULL,
-            amount DECIMAL(10,2) NOT NULL,
-            currency VARCHAR(3) NOT NULL DEFAULT 'USD',
-            status VARCHAR(50) NOT NULL,
-            stripe_payment_id VARCHAR(255) NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    `;
-
     // Insert default products if they don't exist
     await sql`
         INSERT INTO products (name, price, billing_period, stripe_price_id, description)

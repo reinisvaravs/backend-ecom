@@ -112,7 +112,11 @@ export const createCheckoutSession = async (req, res) => {
         },
       ],
       metadata: { plan },
-      success_url: `${process.env.FRONTEND_URL}/store/success`,
+      success_url: `${
+        process.env.FRONTEND_URL
+      }/store/success?email=${encodeURIComponent(
+        email
+      )}&plan=${encodeURIComponent(plan)}`,
       cancel_url: `${process.env.FRONTEND_URL}/store/cancel`,
     });
 
@@ -128,6 +132,7 @@ export const createCheckoutSession = async (req, res) => {
 export const stripeWebhook = async (req, res) => {
   const sig = req.headers["stripe-signature"];
   console.log("🔔 Webhook received with signature:", sig);
+  console.log("🔍 Raw webhook body:", req.body);
 
   let event;
   try {
@@ -137,6 +142,10 @@ export const stripeWebhook = async (req, res) => {
       process.env.STRIPE_WEBHOOK_SECRET
     );
     console.log("✅ Webhook event constructed successfully:", event.type);
+    console.log(
+      "📦 Full event data:",
+      JSON.stringify(event.data.object, null, 2)
+    );
   } catch (err) {
     console.error("❌ Webhook signature verification failed:", err.message);
     return res
@@ -183,7 +192,19 @@ export const stripeWebhook = async (req, res) => {
     sessionId: session.id,
   });
 
+  // First, let's check if the user exists
   try {
+    const userCheck =
+      await sql`SELECT * FROM users WHERE email = ${email} LIMIT 1;`;
+    console.log("👤 User check result:", userCheck);
+
+    if (userCheck.length === 0) {
+      console.error("❌ User not found in database:", email);
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
     const result = await sql`
         UPDATE users
         SET 
@@ -197,14 +218,23 @@ export const stripeWebhook = async (req, res) => {
 
     console.log("✅ Database update result:", result);
     console.log(`Subscription stored for ${email}`);
+
+    // Redirect to success page with subscription ID
+    res.redirect(
+      `${process.env.FRONTEND_URL}/store/success?email=${encodeURIComponent(
+        email
+      )}&plan=${encodeURIComponent(plan)}&subscription_id=${encodeURIComponent(
+        subscriptionId
+      )}`
+    );
+    return;
   } catch (dbError) {
     console.error("❌ Database update failed:", dbError.message);
+    console.error("❌ Full error:", dbError);
     return res
       .status(500)
       .json({ success: false, message: "Database update failed" });
   }
-
-  res.status(200).json({ received: true });
 };
 
 export const cancelSubscription = async (req, res) => {
@@ -274,5 +304,48 @@ export const checkUser = async (req, res) => {
   } catch (error) {
     console.error("Error checking user:", error);
     res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+};
+
+export const updateSubscriptionDetails = async (req, res) => {
+  const { email, subscriptionId, plan } = req.body;
+
+  if (!email || !subscriptionId || !plan) {
+    return res.status(400).json({
+      success: false,
+      message: "Email, subscriptionId, and plan are required",
+    });
+  }
+
+  try {
+    // First check if user exists
+    const userCheck =
+      await sql`SELECT * FROM users WHERE email = ${email} LIMIT 1;`;
+    console.log("👤 User check result:", userCheck);
+
+    if (userCheck.length === 0) {
+      console.error("❌ User not found in database:", email);
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    // Update subscription details
+    const result = await sql`
+      UPDATE users
+      SET 
+        subscription_id = ${subscriptionId}, 
+        plan = ${plan}, 
+        subscribed_at = NOW(),
+        subscription_status = 'active'
+      WHERE email = ${email}
+      RETURNING *;
+    `;
+
+    console.log("✅ Manual update result:", result);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    console.error("❌ Manual update error:", error);
+    res.status(500).json({ success: false, message: error.message });
   }
 };

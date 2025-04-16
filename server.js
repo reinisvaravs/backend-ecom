@@ -5,6 +5,7 @@ import userRoutes from "./routes/userRoutes.js";
 import rootRoutes from "./routes/rootRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
 import stripeRoutes from "./routes/stripeRoutes.js";
+import { stripeWebhook } from "./stripeController.js";
 import cors from "cors";
 
 dotenv.config();
@@ -30,7 +31,7 @@ app.use(
 app.post(
   "/api/stripe/webhook",
   express.raw({ type: "application/json" }),
-  stripeRoutes
+  stripeWebhook
 );
 
 // Apply express.json() to all other routes
@@ -46,6 +47,37 @@ app.use("/api/stripe", stripeRoutes);
 // Test Route for Stripe
 app.get("/api/stripe/test", (req, res) => {
   res.json({ success: true, message: "Stripe is set up correctly!" });
+});
+
+// Test endpoint to manually update subscription
+app.post("/api/stripe/test-update", async (req, res) => {
+  try {
+    const { email, subscriptionId, plan } = req.body;
+
+    if (!email || !subscriptionId || !plan) {
+      return res.status(400).json({
+        success: false,
+        message: "Email, subscriptionId, and plan are required",
+      });
+    }
+
+    const result = await sql`
+      UPDATE users
+      SET 
+        subscription_id = ${subscriptionId}, 
+        plan = ${plan}, 
+        subscribed_at = NOW(),
+        subscription_status = 'active'
+      WHERE email = ${email}
+      RETURNING *;
+    `;
+
+    console.log("✅ Manual update result:", result);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    console.error("❌ Manual update error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
 });
 
 // Ping Pong to wake up the backend

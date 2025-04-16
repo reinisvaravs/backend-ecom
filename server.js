@@ -26,21 +26,21 @@ app.use(
   })
 );
 
-// Apply express.json() only to non-webhook routes
-app.use((req, res, next) => {
-  if (req.path !== "/api/stripe/webhook") {
-    express.json()(req, res, next); // Use express.json() for all other routes
-  } else {
-    next(); // Skip express.json() for webhook
-  }
-});
+// Configure webhook route first, before any body parsing
+app.post(
+  "/api/stripe/webhook",
+  express.raw({ type: "application/json" }),
+  stripeRoutes
+);
+
+// Apply express.json() to all other routes
+app.use(express.json());
+
 const PORT = process.env.PORT || 8383;
 
 app.use("/", rootRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/products", productRoutes);
-
-app.use("/api/stripe/webhook", express.raw({ type: "application/json" }));
 app.use("/api/stripe", stripeRoutes);
 
 // Test Route for Stripe

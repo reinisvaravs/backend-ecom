@@ -127,6 +127,7 @@ export const createCheckoutSession = async (req, res) => {
 
 export const stripeWebhook = async (req, res) => {
   const sig = req.headers["stripe-signature"];
+  console.log("🔔 Webhook received with signature:", sig);
 
   let event;
   try {
@@ -135,8 +136,9 @@ export const stripeWebhook = async (req, res) => {
       sig,
       process.env.STRIPE_WEBHOOK_SECRET
     );
+    console.log("✅ Webhook event constructed successfully:", event.type);
   } catch (err) {
-    console.error("Webhook signature verification failed:", err.message);
+    console.error("❌ Webhook signature verification failed:", err.message);
     return res
       .status(400)
       .json({ success: false, message: `Webhook Error: ${err.message}` });
@@ -165,6 +167,7 @@ export const stripeWebhook = async (req, res) => {
   }
 
   if (event.type !== "checkout.session.completed") {
+    console.log("⏭️ Skipping non-checkout event:", event.type);
     return res.status(200).json({ received: true });
   }
 
@@ -173,20 +176,29 @@ export const stripeWebhook = async (req, res) => {
   const subscriptionId = session.subscription;
   const plan = session.metadata.plan;
 
+  console.log("📝 Processing checkout completion:", {
+    email,
+    subscriptionId,
+    plan,
+    sessionId: session.id,
+  });
+
   try {
-    await sql`
+    const result = await sql`
         UPDATE users
         SET 
             subscription_id = ${subscriptionId}, 
             plan = ${plan}, 
             subscribed_at = NOW(),
             subscription_status = 'active'
-        WHERE email = ${email};
+        WHERE email = ${email}
+        RETURNING *;
       `;
 
+    console.log("✅ Database update result:", result);
     console.log(`Subscription stored for ${email}`);
   } catch (dbError) {
-    console.error("Database update failed:", dbError.message);
+    console.error("❌ Database update failed:", dbError.message);
     return res
       .status(500)
       .json({ success: false, message: "Database update failed" });

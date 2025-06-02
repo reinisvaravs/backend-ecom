@@ -13,7 +13,11 @@ dotenv.config();
 const app = express();
 app.use(express.static("public"));
 
-const allowedOrigins = ["http://localhost:3000", "https://reinisvaravs.com"];
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://reinisvaravs.com",
+  "https://frontend-ecom-r8j6.onrender.com",
+];
 app.use(
   cors({
     origin: function (origin, callback) {

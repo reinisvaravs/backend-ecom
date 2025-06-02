@@ -7,7 +7,7 @@
 [![Powered by Render](https://img.shields.io/badge/Hosted%20on-Render-%230066ff?logo=render)](https://render.com/)
 [![Status](https://img.shields.io/badge/status-live-brightgreen)]()
 
-This is the backend API for my full-stack e-commerce store, built with **Node.js**, **Express.js**, and **PostgreSQL**. It powers the frontend available at [reinisvaravs.com/store](https://reinisvaravs.com/store) and handles user authentication, product data, Stripe checkout, and more.
+This is the backend API for my full-stack e-commerce store, built with **Node.js**, **Express.js**, and **PostgreSQL**. It powers the frontend available at [https://frontend-ecom-r8j6.onrender.com](https://frontend-ecom-r8j6.onrender.com) and handles user authentication, product data, Stripe checkout, and more.
 
 - 🌐 Frontend Repository: [E-Commerce Frontend](https://github.com/reinisvaravs/frontend-ecom)
 

@@ -114,10 +114,10 @@ export const createCheckoutSession = async (req, res) => {
       metadata: { plan },
       success_url: `${
         process.env.FRONTEND_URL
-      }/store/success?email=${encodeURIComponent(
+      }/success?email=${encodeURIComponent(
         email
       )}&plan=${encodeURIComponent(plan)}`,
-      cancel_url: `${process.env.FRONTEND_URL}/store/cancel`,
+      cancel_url: `${process.env.FRONTEND_URL}/cancel`,
     });
 
     res
@@ -221,7 +221,7 @@ export const stripeWebhook = async (req, res) => {
 
     // Redirect to success page with subscription ID
     res.redirect(
-      `${process.env.FRONTEND_URL}/store/success?email=${encodeURIComponent(
+      `${process.env.FRONTEND_URL}/success?email=${encodeURIComponent(
         email
       )}&plan=${encodeURIComponent(plan)}&subscription_id=${encodeURIComponent(
         subscriptionId
